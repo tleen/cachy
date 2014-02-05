@@ -28,6 +28,7 @@
     "test" : "node_modules/grunt-cafe-mocha/node_modules/mocha/bin/mocha test/*.js"
   }, 
   "keywords" : [
+    "cachy",
     "cache",
     "simple"
   ]

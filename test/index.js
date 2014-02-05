@@ -1,6 +1,7 @@
 'use strict';
 
-var pkg = require('../package.json'),
+var filesystemStore = require('cachy-filesystem'),
+pkg = require('../package.json'),
 should = require('should'),
 _ = require('underscore');
 
@@ -18,7 +19,7 @@ describe('versioning', function(){
 
 
 
-var fxns = ['info','clear','put','has','get','remove','hash'];
+var fxns = ['write','has','read','remove','clear','keys'];
 function verifyInterface(cache){
   describe('interface has', function(){
     _.each(fxns, function(fxn){
@@ -63,7 +64,7 @@ describe('default storage', function(){
   var cache = require('..')();
   verifyInterface(cache);
 
-  _.each(['info','clear','put','has','get','remove'], function(fxn){
+  _.each(fxns, function(fxn){
     it(fxn + '() should callback an error', function(done){
       cache[fxn](function(err){
 	err.should.be.a.Error;
@@ -72,5 +73,11 @@ describe('default storage', function(){
     });
   });
 });
-
+/*
+describe('filesystem store backed', function(){
+  var store = filesystemStore();
+  var cache = require('..')(store);
+  verifyInterface(cache);
+});
+*/
 

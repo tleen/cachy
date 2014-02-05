@@ -16,7 +16,20 @@ module.exports = function(store, config){
   var hashFunction = function(key){
     return crypto.createHash('md5').update(JSON.stringify(key)).digest('hex');
   };
+ 
+ // wrap put/get with key set
 
+  function container(key, data){
+    return JSON.stringify({
+      timestamp : Date.now(),
+      key : key,
+      data : data
+    });
+  }
+
+  function uncontainer(data){
+    return data.data;
+  }
 
   return _.defaults({
     hash : hashFunction

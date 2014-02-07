@@ -3,6 +3,9 @@
 // xx - add timed cache tests
 
 var filesystemStore = require('cachy-filesystem'),
+memoryStore = require('cachy-memory');
+
+var async = require('async'),
 pkg = require('../package.json'),
 should = require('should'),
 _ = require('underscore');
@@ -90,10 +93,14 @@ var objects = [
 
 _.each([
   {
+    name : 'memory',
+    store : memoryStore
+  },
+  {
     name : 'filesystem',
     store : filesystemStore()
   }], function(storage){
-    describe(storage.name + ' storage', function(){
+    describe(storage.name + ' storage, forever', function(){
       var cache = require('..')(storage.store);
       
       describe('put()', function(){
@@ -142,7 +149,7 @@ _.each([
       
       describe('size()', function(){
 	it('should equal put() objects', function(done){
-	  cache.size(function(size){
+	  cache.size(function(err, size){
 	    size.should.equal(objects.length);
 	    done();
 	  });
@@ -154,7 +161,7 @@ _.each([
 	it('should remove the entry "' + objects[0].key + '"', function(done){
 	  cache.remove(objects[0].key, function(err){
 	    should.not.exist(err);
-	    cache.size(function(size){
+	    cache.size(function(err, size){
 	      size.should.equal(objects.length - 1);
 	      done();
 	    });
@@ -167,7 +174,7 @@ _.each([
 	it('should clear the cache', function(done){
 	  cache.clear(function(err){
 	    should.not.exist.err;
-	    cache.size(function(size){
+	    cache.size(function(err, size){
 	      size.should.equal(0);
 	      done();
 	    });
@@ -175,4 +182,48 @@ _.each([
 	});
       });
     });
-  });
+
+    describe(storage.name + ' storage, timed (5 seconds)', function(){
+      var cache = require('..')(storage.store, {duration : 5000});
+      it('should perform multiple (undescribed) tests in one async series', function(done){
+	this.timeout(10000);
+	async.series([
+	  function(callback){
+	    async.each(objects, function(item, callback){
+	      cache.put(item.key, item.data, function(err){
+		should.not.exist(err);
+		return callback(err);
+	      });
+	    }, callback);
+	  },
+	  function(callback){
+	    cache.size(function(err, size){
+//	      size.should.equal(objects.length);
+	      return callback();
+	    });
+	  },
+	  function(callback){ // force a pause in the test
+	    setTimeout(callback,3000);
+	  },
+	  function(callback){
+	    cache.size(function(err, size){
+//	      size.should.equal(objects.length);
+	      return callback();
+	    });
+	  },
+	  function(callback){ // force another pause in the test (putting us over cache duration)
+	    setTimeout(callback,5000);
+	  },
+	  function(callback){
+	    cache.size(function(err, size){
+	      if(err) return callback(err);
+	      size.should.equal(0);
+	      return callback();
+	    });
+	  }
+	],function(err, results){
+	  return done(err);
+	});
+      });
+    });
+});

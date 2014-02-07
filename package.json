@@ -21,6 +21,7 @@
   },
   "devDependencies" : {
     "cachy-filesystem" : "latest",
+    "cachy-memory" : "latest",
     "grunt" : "0.4.2",
     "grunt-cafe-mocha" : "0.1.10",
     "grunt-contrib-jshint" : "0.8.0",

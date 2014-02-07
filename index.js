@@ -42,7 +42,6 @@ module.exports = function(store, config){
       returner.expires = (returner.created + duration);
     }
 
-//    console.log(returner);
     return returner;
   }
 
@@ -63,12 +62,11 @@ module.exports = function(store, config){
       if(err) return callback(err);
       
       if(data.expires && (data.expires <= Date.now())){
-//	console.log('expiring data:', data.key);
-	storage.remove(data.hash);
+	storage.remove(data.hash, function(err){
+	  // callback err? or ignore?
+	});
 	return callback(new Error('expired: ' + data.key));
-      }
-
-      return callback(null, unpack(data));
+      }else return callback(null, unpack(data));
     });
   }
 
@@ -79,7 +77,6 @@ module.exports = function(store, config){
 
   function hasHash(hash, callback){
     getHash(hash, function(err, data){
-//      console.log('hasHash', hash, err);
       return callback((!err));
     });
   }
@@ -100,22 +97,19 @@ module.exports = function(store, config){
   function size(callback){
     storage.keys(function(err, hashes){ // storage keys are the hashes
       if(err) return callback(err);
-      if(!duration) return callback(hashes.length);
+      if(!duration) return callback(null, hashes.length);
       
-//      console.log('size found hashes', hashes);
       // if duration we need to check for expired entries
+      if(hashes.length === 0) return callback(null, 0);
 
       async.map(hashes, function(h, callback){
 	hasHash(h, function(bool){ callback(null, bool); });
       }, function(err, results){
-//	console.log(results);
 	if(err) return callback(err);
 	var len = _.filter(results, function(bool) { return bool; }).length;
-//	console.log('duration based size returning', len);
 	return callback(null, len);		
       });
-
-    });
+    }); 
   }
   
  // get all keys and return formatted object representing cache state
